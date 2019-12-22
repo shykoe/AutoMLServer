@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"strconv"
 )
 
@@ -30,7 +31,9 @@ type IpcData struct{
 	ipcRemain  string
 }
 func (d *IpcData) decode() []byte{
-	content := fmt.Sprintf("%s%06d%s",d.cedType, d.cmdLength, d.ipcRemain)
+	d.cmdLength = len(d.cmdContent)
+	content := fmt.Sprintf("%s%06d%s",d.cedType, d.cmdLength, d.cmdContent)
+	log.Info("cmd decode ", content)
 	return []byte(content)
 }
 func convert(data []byte) (error, *IpcData){
