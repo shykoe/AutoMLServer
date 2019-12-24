@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 )
+
 type experment struct {
 	write4out *os.File
 	read4nni *os.File
@@ -23,8 +24,12 @@ type experment struct {
 	mu    sync.RWMutex
 	searchSpace string
 	parallel int
+	maxTrialNum int
 	expId string
 	S3 string
+	tuner *exec.Cmd
+	jobFile string
+	runner string
 }
 func (e *experment) listen(){
 	for ; ;  {
@@ -60,18 +65,23 @@ func (e *experment) work()  {
 						params,ok := jsonData["parameters"].(map[string]interface {})
 						if !ok{
 							log.Error("params Decode Error")
+							e.close()
 							return
 						}
-						ind,ok:= jsonData["parameter_id"].(int)
+						ind,ok:= jsonData["parameter_id"].(float64)
 						if !ok{
 							log.Error("Parameter_id Decode Error")
+							log.Info()
+							e.close()
 							return
 						}
 						job := &trial{
-							jobId:fmt.Sprintf("%s_%d", e.expId, ind),
-							startTime: time.Now(),
-							parameters:params,
-							S3:e.S3,
+							jobId:        fmt.Sprintf("%s_%f", e.expId, ind),
+							startTime:    time.Now(),
+							parameters:   params,
+							jobFile:      e.jobFile,
+							status:       READY,
+							experimentId: e.expId,
 						}
 						go job.run()
 						e.trials.PushBack(job)
@@ -107,9 +117,16 @@ func(e *experment) keepAlive()  {
 			cedType:Ping,
 			cmdContent:"",
 		}
-		e.send(alive)
+		if err := e.send(alive);err!=nil{
+			log.Warn("keepAlive send error! ")
+			break
+		}
 		time.Sleep(1 * time.Second)
 	}
+}
+func (e *experment) getS3File() string{
+	
+	return "/Users/shykoe/go/src/auto/mock/numerous/20191205"
 }
 func (e *experment) run(){
 	cmd := exec.Command("python", "-m", "nni", "--tuner_class_name", e.tunerType, "--tuner_args", e.tunerArgs)
@@ -132,15 +149,24 @@ func (e *experment) run(){
 	e.write4out = w1
 	e.write4nni = w2
 	e.read4out = r2
+	e.tuner = cmd
 	go cmd.Run()
 	go e.listen()
-	go e.keepAlive()
+	e.getS3File()
+	//go e.keepAlive()
 	go e.work()
 	initExp := IpcData{
 		cedType:Initialize,
 		cmdContent:e.searchSpace,
 	}
 	e.send(initExp)
+	_, err = DB.Exec("insert INTO t_experiment_info(`experiment_name`, `runner`, `search_space`, `start_time`," +
+							" `trial_concurrency`, `max_trial_num`, `algorithm_type`, `algorithm_content`, `status`) values(?,?,?,?,?,?,?,?,?) ",
+							e.expId, e.runner, e.searchSpace, time.Now(), e.parallel, e.maxTrialNum, e.tunerType, e.tunerArgs, READY  )
+	if err!= nil{
+		log.Error(err)
+		e.close()
+	}
 	for ; ;  {
 		if e.trials.Len() < e.parallel{
 			//should add jobs
@@ -150,19 +176,37 @@ func (e *experment) run(){
 					cedType:RequestTrialJobs,
 					cmdContent:"1",
 				}
-				e.send(initExp)
+				if err := e.send(initExp); err!=nil{
+					log.Warn("send error! Need to close!")
+					e.close()
+					return
+				}
 			}
 
 		}
 		time.Sleep(2*time.Second)
 	}
 }
-func (e *experment) send(data IpcData){
+func (e *experment) send(data IpcData) error{
 	log.Info("send", data.cedType, data.cmdContent)
 	byteContent := data.decode()
-	log.Info("send ",byteContent)
 	_, err := e.write4out.Write(byteContent)
-	if err != nil {
-		panic(err)
+	return err
+}
+func (e *experment) close(){
+	if e.tuner!=nil{
+		e.tuner.Process.Kill()
+	}
+	if e.read4out!=nil{
+		e.read4out.Close()
+	}
+	if e.read4nni!=nil{
+		e.read4nni.Close()
+	}
+	if e.write4out!=nil{
+		e.write4out.Close()
+	}
+	if e.write4nni!=nil{
+		e.write4nni.Close()
 	}
 }

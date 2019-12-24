@@ -2,50 +2,28 @@ package main
 
 import (
 	"container/list"
+	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"time"
 )
 
-//func makemsg(cmdtype string , mgs string) []byte{
-//	content := fmt.Sprintf("%s%06d%s",cmdtype, len(mgs), mgs)
-//	//fmt.Print(content)
-//	value := []byte(content)
-//	return value
-//}
-//func decode(data []byte) (bool, string, string, string){
-//	if len(data) < 8 {
-//		return false, "", "", ""
-//	}
-//	commandType := string(data[:2])
-//	commandLength,err := strconv.Atoi(string(data[2:8]))
-//	if err != nil{
-//		log.Printf("error", err)
-//		return false, "", "", ""
-//	}
-//	if len(data) < commandLength +8 {
-//		return false, "", "", ""
-//	}
-//	command := string(data[8:commandLength+8])
-//	remain := string(data[commandLength+8:])
-//	return true, commandType, command, remain
-//}
-//func newChild(f1 *os.File, f2 *os.File){
-//	cmd := exec.Command("python", "-m", "nni", "--tuner_class_name", "TPE", "--tuner_args", "{\"optimize_mode\":\"maximize\"}")
-//	cmd.Env = os.Environ()
-//	pip :=make([]*os.File,2)
-//	pip[0] = f1
-//	pip[1] = f2
-//	cmd.ExtraFiles = pip
-//	cmd.Stdout = os.Stdout
-//	cmd.Stderr = os.Stdout
-//	err := cmd.Run()
-//	if err!=nil {
-//		log.Fatal(err)
-//	}
-//}
+var DB *sql.DB
+var (
+	USERNAME string
+	PASSWORD string
+	NETWORK  = "tcp"
+	SERVER   string
+	PORT     string
+	DATABASE string
+	Count int64
+)
 type AddExpJson struct {
 	User     string `form:"user" json:"user" xml:"user"  binding:"required"`
 	S3 string `form:"S3" json:"S3" xml:"S3" binding:"required"`
@@ -53,12 +31,44 @@ type AddExpJson struct {
 	TunerArgs string `form:"tunerArgs" json:"tunerArgs" xml:"tunerArgs" binding:"required"`
 	SearchSpace string `form:"SearchSpace" json:"SearchSpace" xml:"SearchSpace" binding:"required"`
 	Parallel int `form:"Parallel" json:"Parallel" xml:"Parallel" `
+	MaxTrialNum int `form:"MaxTrialNum" json:"MaxTrialNum" xml:"MaxTrialNum" `
 }
 func (a *AddExpJson) toString() string{
 	str := fmt.Sprintf("User: %s\nS3: %s\nTunerType: %s\nTunerArgs: %s\nSearchSpace: %s\nParallel: %d", a.User, a.S3, a.TunerType ,a.TunerArgs, a.SearchSpace, a.Parallel)
 	return str
 }
+func initDB() error{
+	var err error
+	config := make(map[string] string)
+	data, err := ioutil.ReadFile("./config.yml")
+	err = yaml.Unmarshal(data,&config)
+	if err != nil{
+		log.Fatal(err)
+		return err
+	}
+	USERNAME = config["username"]
+	PASSWORD = config["password"]
+	SERVER = config["server"]
+	DATABASE = config["database"]
+	PORT = config["port"]
+	dsn := fmt.Sprintf("%s:%s@%s(%s:%s)/%s",USERNAME,PASSWORD,NETWORK,SERVER,PORT,DATABASE)
+	DB, err = sql.Open("mysql",dsn)
+	if err!=nil{
+		log.Fatal(err)
+		return err
+	}
+	DB.SetConnMaxLifetime(100*time.Second)  //最大连接周期，超过时间的连接就close
+	DB.SetMaxOpenConns(1000)//设置最大连接数
+	DB.SetMaxIdleConns(0) //设置闲置连接数
+	return nil
+}
 func main() {
+	log.SetReportCaller(true)
+	err := initDB()
+	if err!=nil{
+		log.Fatal(err)
+		return
+	}
 	var exp = make(map[string] *experment )
 	r := gin.Default()
 	r.POST("/addExp", func(context *gin.Context) {
@@ -89,6 +99,8 @@ func main() {
 			parallel:parallelNum,
 			expId:ids,
 			S3:json.S3,
+			runner:json.User,
+			maxTrialNum:json.MaxTrialNum,
 		}
 		go newExp.run()
 		exp[ids] = newExp
@@ -96,75 +108,5 @@ func main() {
 
 	})
 	r.Run(":8989")
-
-
-
-	//tunerType := "TPE"
-	//tunerArgs := "{\"optimize_mode\":\"maximize\"}"
-	//newExp :=  &experment{
-	//	tunerType:tunerType,
-	//	tunerArgs:tunerArgs,
-	//	ll : list.New(),
-	//	output: make(chan struct{}),
-	//}
-	//initExp := IpcData{
-	//	cedType:Initialize,
-	//	cmdContent:"{\"learning_rate\": {\"_type\": \"choice\", \"_value\": [0.0001, 0.001, 0.01, 0.1]}}",
-	//
-	//}
-	//go newExp.run()
-	//
-	//getJob := IpcData{
-	//	cedType:RequestTrialJobs,
-	//	cmdContent:"1",
-	//}
-	//newExp.send(initExp)
-	//newExp.send(getJob)
-	//for ; ;  {
-	//	select {
-	//	case <- newExp.wait():
-	//		for{
-	//			data := newExp.get()
-	//			if data!= nil{
-	//				log.Info("asdasd!!",data.cedType, data.cmdContent)
-	//			}
-	//			break
-	//		}
-	//
-	//	}
-	//}
-
-
-	//r1, w1, err := os.Pipe()
-	//if err != nil {
-	//	panic(err)
-	//}
-	//r2, w2, err := os.Pipe()
-	//if err != nil {
-	//	panic(err)
-	//}
-	//if err != nil {
-	//	panic(err)
-	//}
-	//go newChild(r1,w2)
-	//data := makemsg("IN", "{\"learning_rate\": {\"_type\": \"choice\", \"_value\": [0.0001, 0.001, 0.01, 0.1]}}")
-	//_,err = w1.Write(data)
-	//if err !=nil{
-	//	panic(err)
-	//}
-	//data2 := makemsg("GE","1")
-	//_,err = w1.Write(data2)
-	//if err != nil{
-	//	panic(err)
-	//}
-	//for ; ;  {
-	//	out := make([]byte, 10000)
-	//	_, err = r2.Read(out)
-	//	isok, cmdtype, cmd, remain :=decode(out)
-	//	if isok == false{
-	//		continue
-	//	}
-	//	log.Print("asdasd!!",cmdtype, cmd, remain)
-	//}
 
 }
