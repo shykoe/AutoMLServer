@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
@@ -53,8 +52,8 @@ func (t *trial) callBore(boreFile string) error {
 		filePtr.Close()
 		return err
 	}
-	boreMap["appinstance_name"] = fmt.Sprintf("t_nni_%s", t.jobId)
-
+	boreMap["appinstance_name"] = t.jobId
+	boreMap["app_name"] = t.jobId
 	b, err := json.Marshal(boreMap)
 	if err != nil {
 		log.Error("BoreJson error: ", err)

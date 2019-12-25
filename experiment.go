@@ -10,8 +10,10 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -129,7 +131,7 @@ func (e *experiment) prepareTrial(trialId string, workSpace string, params *map[
 	if err != nil {
 		return nil, err
 	}
-	s3Path := fmt.Sprintf("%s/%s", "testAutoml", trialTar)
+	s3Path := fmt.Sprintf("%s/%s", "testAutoml", strings.TrimPrefix(trialTar, string(filepath.Separator)))
 	err = uploadS3(trialTar, BUCKET, s3Path, "public-read")
 	if err!=nil{
 		return nil, err
