@@ -2,13 +2,53 @@ package main
 
 import (
 	"archive/tar"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 )
+func uploadS3(fileName string, bucket string , key string) error{
 
+	s3Config := &aws.Config{
+		Credentials:      credentials.NewStaticCredentials(S3AK, S3SK, ""),
+		Endpoint:         aws.String(S3HOST),
+		Region:           aws.String("default"),
+		DisableSSL:       aws.Bool(true),
+		S3ForcePathStyle: aws.Bool(false),
+	}
+
+	sess,err := session.NewSession(s3Config)
+	if err!=nil{
+		log.Error("NewSession err:", err)
+		return err
+	}
+	//svc := s3.New(sess)
+
+	file, err := os.Open(fileName)
+	if err != nil {
+		log.Error("Unable to open file", err)
+		return err
+	}
+	uploader := s3manager.NewUploader(sess)
+
+	defer file.Close()
+
+	_, err = uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+		Body:   file,
+	})
+	if err != nil {
+		log.Error("Unable to upload %q to %q, %v", fileName, bucket, err)
+		return err
+	}
+	return nil
+}
 func createTar(path string, target string) error {
 	fw, err := os.Create(target)
 	if err != nil {

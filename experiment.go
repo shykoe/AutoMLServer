@@ -56,8 +56,8 @@ func (e *experment) listen(){
 	}
 }
 func (e *experment) prepareTrial(trialId string, workSpace string ,params *map[string]interface{}) (string, error){
-	trialPath := path.Join(workSpace, trialId)
-	var trialTar string = fmt.Sprintf("%s/%s.tar",workSpace ,trialId )
+	trialPath := path.Join(tmpRoot, trialId)
+	var trialTar string = fmt.Sprintf("%s/%s.tar",tmpRoot ,trialId )
 	err := copy.Copy(e.workDir, trialPath)
 	if err != nil{
 		log.Error(err)

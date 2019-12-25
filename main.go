@@ -23,6 +23,9 @@ var (
 	PORT     string
 	DATABASE string
 	Count int64
+	S3HOST = "http://s3test.sumeru.mig"
+	S3AK string
+	S3SK string
 )
 type AddExpJson struct {
 	User     string `form:"user" json:"user" xml:"user"  binding:"required"`
@@ -37,7 +40,7 @@ func (a *AddExpJson) toString() string{
 	str := fmt.Sprintf("User: %s\nWorkDir: %s\nTunerType: %s\nTunerArgs: %s\nSearchSpace: %s\nParallel: %d", a.User, a.WorkDir, a.TunerType ,a.TunerArgs, a.SearchSpace, a.Parallel)
 	return str
 }
-func initDB() error{
+func initDBAndConfig() error{
 	var err error
 	config := make(map[string] string)
 	data, err := ioutil.ReadFile("./config.yml")
@@ -51,6 +54,8 @@ func initDB() error{
 	SERVER = config["server"]
 	DATABASE = config["database"]
 	PORT = config["port"]
+	S3AK = config["accessKey"]
+	S3SK = config["secretKey"]
 	dsn := fmt.Sprintf("%s:%s@%s(%s:%s)/%s",USERNAME,PASSWORD,NETWORK,SERVER,PORT,DATABASE)
 	DB, err = sql.Open("mysql",dsn)
 	if err!=nil{
@@ -64,7 +69,7 @@ func initDB() error{
 }
 func main() {
 	log.SetReportCaller(true)
-	err := initDB()
+	err := initDBAndConfig()
 	if err!=nil{
 		log.Fatal(err)
 		return

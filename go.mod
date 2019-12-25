@@ -3,6 +3,7 @@ module auto
 go 1.13
 
 require (
+	github.com/aws/aws-sdk-go v1.26.8
 	github.com/dchest/uniuri v0.0.0-20160212164326-8902c56451e9
 	github.com/gin-gonic/gin v1.5.0
 	github.com/go-sql-driver/mysql v1.4.1
