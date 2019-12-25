@@ -27,6 +27,7 @@ var (
 	S3AK string
 	S3SK string
 	TMPPATH string
+	BOREURL string
 )
 type AddExpJson struct {
 	User     string `form:"user" json:"user" xml:"user"  binding:"required"`
@@ -36,6 +37,7 @@ type AddExpJson struct {
 	SearchSpace string `form:"SearchSpace" json:"SearchSpace" xml:"SearchSpace" binding:"required"`
 	Parallel int `form:"Parallel" json:"Parallel" xml:"Parallel" `
 	MaxTrialNum int `form:"MaxTrialNum" json:"MaxTrialNum" xml:"MaxTrialNum" `
+	BoreFile int `form:"BoreFile" json:"BoreFile" xml:"BoreFile" `
 }
 func (a *AddExpJson) toString() string{
 	str := fmt.Sprintf("User: %s\nWorkDir: %s\nTunerType: %s\nTunerArgs: %s\nSearchSpace: %s\nParallel: %d", a.User, a.WorkDir, a.TunerType ,a.TunerArgs, a.SearchSpace, a.Parallel)
@@ -58,6 +60,7 @@ func initDBAndConfig() error{
 	S3AK = config["accessKey"]
 	S3SK = config["secretKey"]
 	TMPPATH = config["tmpPath"]
+	BOREURL = config["boreUrl"]
 	dsn := fmt.Sprintf("%s:%s@%s(%s:%s)/%s",USERNAME,PASSWORD,NETWORK,SERVER,PORT,DATABASE)
 	DB, err = sql.Open("mysql",dsn)
 	if err!=nil{
@@ -108,6 +111,7 @@ func main() {
 			workDir:json.WorkDir,
 			runner:json.User,
 			maxTrialNum:json.MaxTrialNum,
+			boreFile: BoreFile,
 		}
 		go newExp.run()
 		exp[ids] = newExp

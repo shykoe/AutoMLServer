@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
 	"time"
 )
 
@@ -34,11 +33,12 @@ type trial struct {
 	status       string
 	s3           string
 	expId int64
+	boreFile string
 
 }
-func (t *trial) callBore(fileRoot string) error{
+func (t *trial) callBore(boreFile string) error{
 
-	filePtr, err := os.Open(path.Join(fileRoot, "bore.json"))
+	filePtr, err := os.Open(boreFile)
 	defer func() {
 		if filePtr == nil{
 			return
@@ -65,7 +65,7 @@ func (t *trial) callBore(fileRoot string) error{
 		log.Error("BoreJson error: ",err)
 		return err
 	}
-	resp, err := http.Post(boreUrl,"application/json;charset=UTF-8", bytes.NewBuffer(b) )
+	resp, err := http.Post(BOREURL,"application/json;charset=UTF-8", bytes.NewBuffer(b) )
 	if err!=nil{
 		log.Error("Http error ", err)
 		return err
@@ -97,7 +97,7 @@ func (t *trial)run()  {
 		return
 	}
 	log.Info("jobId: ",t.jobId, "\nstartTime", t.startTime.String(), "\nparameters:", t.parameters, "\nS3:", t.jobFile)
-	err = t.callBore("/Users/shykoe/go/src/auto/mock/20191223/")
+	err = t.callBore(t.boreFile)
 	if err!= nil{
 		log.Error("call bore error: ",err)
 		t.status = ERROR

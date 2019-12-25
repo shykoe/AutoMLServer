@@ -34,6 +34,7 @@ type experiment struct {
 	runner string
 	expId int64
 	currentNum int
+	boreFile string
 }
 func (e *experiment) listen(){
 	for ; ;  {
@@ -127,6 +128,7 @@ func (e *experiment) work()  {
 							jobFile:      tarFile,
 							status:       READY,
 							expId: e.expId,
+							boreFile: e.boreFile,
 						}
 						go job.run()
 						e.trials.PushBack(job)
