@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 )
-func uploadS3(fileName string, bucket string , key string) error{
+func uploadS3(fileName string, bucket string , key string, acl string) error{
 
 	s3Config := &aws.Config{
 		Credentials:      credentials.NewStaticCredentials(S3AK, S3SK, ""),
@@ -42,6 +42,7 @@ func uploadS3(fileName string, bucket string , key string) error{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 		Body:   file,
+		ACL: aws.String(acl),
 	})
 	if err != nil {
 		log.Error("Unable to upload %q to %q, %v", fileName, bucket, err)

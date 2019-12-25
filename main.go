@@ -28,6 +28,7 @@ var (
 	S3SK string
 	TMPPATH string
 	BOREURL string
+	BUCKET string
 )
 type AddExpJson struct {
 	User     string `form:"user" json:"user" xml:"user"  binding:"required"`
@@ -61,6 +62,7 @@ func initDBAndConfig() error{
 	S3SK = config["secretKey"]
 	TMPPATH = config["tmpPath"]
 	BOREURL = config["boreUrl"]
+	BUCKET = config["bucket"]
 	dsn := fmt.Sprintf("%s:%s@%s(%s:%s)/%s",USERNAME,PASSWORD,NETWORK,SERVER,PORT,DATABASE)
 	DB, err = sql.Open("mysql",dsn)
 	if err!=nil{
@@ -91,6 +93,7 @@ func main() {
 			context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		rand.Seed(time.Now().UnixNano())
 		ids := fmt.Sprintf("%s_%d",json.User ,rand.Int31())
 		log.Info("get json ", json.toString())
 		var parallelNum int
