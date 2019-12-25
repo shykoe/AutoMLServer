@@ -12,6 +12,24 @@ import (
 	"path/filepath"
 	"strings"
 )
+
+func runeSearch(text []rune, what string) int  {
+	whatRunes := []rune(what)
+
+	for i := range text {
+		found := true
+		for j := range whatRunes {
+			if text[i+j] != whatRunes[j] {
+				found = false
+				break
+			}
+		}
+		if found {
+			return i
+		}
+	}
+	return -1
+}
 func uploadS3(fileName string, bucket string , key string, acl string) error{
 
 	s3Config := &aws.Config{
@@ -45,7 +63,7 @@ func uploadS3(fileName string, bucket string , key string, acl string) error{
 		ACL: aws.String(acl),
 	})
 	if err != nil {
-		log.Error("Unable to upload %q to %q, %v", fileName, bucket, err)
+		log.Error("Unable to upload ", fileName," to ", bucket, err)
 		return err
 	}
 	return nil

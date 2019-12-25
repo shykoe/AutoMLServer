@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -68,8 +69,51 @@ func (t *trial) callBore(boreFile string) error {
 	log.Info("http Body:", string(response))
 	return nil
 }
-func (t *trial) getMetric() {
+func (t *trial) getMetric() error{
+	const url = "http://localhost:8111/getlog"
+	var current int
+	const everyLen = 100
+	var Err int = 0
+	var maxErr int = 10
+	for ; ;  {
+		req, err := http.NewRequest("GET",url,nil)
+		if err!=nil{
+			log.Error(err)
+			return err
+		}
+		q := req.URL.Query()
+		q.Add("start", strconv.Itoa(current) )
+		q.Add("length", strconv.Itoa(everyLen))
+		req.URL.RawQuery = q.Encode()
+		resp, err := http.DefaultClient.Do(req)
+		if err!=nil{
+			if Err < maxErr{
+				log.Error(err)
+				Err += 1
+				continue
+			}
+			return err
+		}
+		var data = make(map[string] string)
+		response, _ := ioutil.ReadAll(resp.Body)
+		if err = json.Unmarshal(response,&data); err!=nil{
+			log.Error(err)
+			return err
+		}
+		logStr := []rune(data["data"])
+		for ; ;  {
+			aLen := runeSearch(logStr,"\n")
+			if aLen == -1{
+				break
+			}
+			current += aLen
+			log.Info(string(logStr[:aLen]))
+			logStr = logStr[aLen+1:]
+		}
 
+
+
+	}
 }
 func (t *trial) getStatus() {
 	//for ; ;  {
