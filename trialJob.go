@@ -88,7 +88,7 @@ func (t *trial)run()  {
 		log.Error(err)
 		t.status = ERROR
 	}
-	_,err = DB.Exec("INSERT INTO `automl`.`t_trials_info`(`trial_name`," +
+	_,err = DB.Exec("INSERT INTO `t_trials_info`(`trial_name`," +
 		"`s3_path`,`parameter`,`start_time`,`end_time`,`status`,`experiment_id`) VALUES ( ?, ?, ?, ?, ?, ?, ? )  ",
 		t.jobId, t.s3, paraStr, time.Now(), nil, t.status,  t.expId )
 	if err!=nil{
