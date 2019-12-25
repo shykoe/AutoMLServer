@@ -37,7 +37,7 @@ type AddExpJson struct {
 	SearchSpace string `form:"SearchSpace" json:"SearchSpace" xml:"SearchSpace" binding:"required"`
 	Parallel int `form:"Parallel" json:"Parallel" xml:"Parallel" `
 	MaxTrialNum int `form:"MaxTrialNum" json:"MaxTrialNum" xml:"MaxTrialNum" `
-	BoreFile int `form:"BoreFile" json:"BoreFile" xml:"BoreFile" `
+	BoreFile string `form:"BoreFile" json:"BoreFile" xml:"BoreFile" `
 }
 func (a *AddExpJson) toString() string{
 	str := fmt.Sprintf("User: %s\nWorkDir: %s\nTunerType: %s\nTunerArgs: %s\nSearchSpace: %s\nParallel: %d", a.User, a.WorkDir, a.TunerType ,a.TunerArgs, a.SearchSpace, a.Parallel)
@@ -111,7 +111,7 @@ func main() {
 			workDir:json.WorkDir,
 			runner:json.User,
 			maxTrialNum:json.MaxTrialNum,
-			boreFile: BoreFile,
+			boreFile: json.BoreFile,
 		}
 		go newExp.run()
 		exp[ids] = newExp
