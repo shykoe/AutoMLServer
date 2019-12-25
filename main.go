@@ -26,6 +26,7 @@ var (
 	S3HOST = "http://s3test.sumeru.mig"
 	S3AK string
 	S3SK string
+	TMPPATH string
 )
 type AddExpJson struct {
 	User     string `form:"user" json:"user" xml:"user"  binding:"required"`
@@ -56,6 +57,7 @@ func initDBAndConfig() error{
 	PORT = config["port"]
 	S3AK = config["accessKey"]
 	S3SK = config["secretKey"]
+	TMPPATH = config["tmpPath"]
 	dsn := fmt.Sprintf("%s:%s@%s(%s:%s)/%s",USERNAME,PASSWORD,NETWORK,SERVER,PORT,DATABASE)
 	DB, err = sql.Open("mysql",dsn)
 	if err!=nil{
@@ -74,7 +76,7 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-	var exp = make(map[string] *experment )
+	var exp = make(map[string] *experiment)
 	r := gin.Default()
 	r.POST("/addExp", func(context *gin.Context) {
 		var json AddExpJson
@@ -94,7 +96,7 @@ func main() {
 		}else{
 			parallelNum = 1
 		}
-		newExp :=  &experment{
+		newExp :=  &experiment{
 			tunerType:json.TunerType,
 			tunerArgs:json.TunerArgs,
 			ll : list.New(),

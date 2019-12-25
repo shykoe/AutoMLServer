@@ -13,8 +13,7 @@ import (
 	"sync"
 	"time"
 )
-const tmpRoot = "/Users/shykoe/go/src/auto/mock/tmp"
-type experment struct {
+type experiment struct {
 	write4out *os.File
 	read4nni *os.File
 	write4nni *os.File
@@ -36,7 +35,7 @@ type experment struct {
 	expId int64
 	currentNum int
 }
-func (e *experment) listen(){
+func (e *experiment) listen(){
 	for ; ;  {
 		out := make([]byte, 10000)
 		_, err := e.read4out.Read(out)
@@ -55,9 +54,9 @@ func (e *experment) listen(){
 		e.output <- struct{}{}
 	}
 }
-func (e *experment) prepareTrial(trialId string, workSpace string ,params *map[string]interface{}) (string, error){
-	trialPath := path.Join(tmpRoot, trialId)
-	var trialTar string = fmt.Sprintf("%s/%s.tar",tmpRoot ,trialId )
+func (e *experiment) prepareTrial(trialId string, workSpace string ,params *map[string]interface{}) (string, error){
+	trialPath := path.Join(TMPPATH, trialId)
+	var trialTar string = fmt.Sprintf("%s/%s.tar",TMPPATH ,trialId )
 	err := copy.Copy(e.workDir, trialPath)
 	if err != nil{
 		log.Error(err)
@@ -88,7 +87,7 @@ func (e *experment) prepareTrial(trialId string, workSpace string ,params *map[s
 
 	return trialTar, nil
 }
-func (e *experment) work()  {
+func (e *experiment) work()  {
 	for ; ;  {
 		select {
 		case <- e.wait():
@@ -144,10 +143,10 @@ func (e *experment) work()  {
 		}
 	}
 }
-func(e *experment) wait() <- chan struct{}{
+func(e *experiment) wait() <- chan struct{}{
 	return e.output
 }
-func(e *experment) get() *IpcData {
+func(e *experiment) get() *IpcData {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if elem := e.ll.Front(); elem!=nil{
@@ -157,7 +156,7 @@ func(e *experment) get() *IpcData {
 	}
 	return nil
 }
-func(e *experment) keepAlive()  {
+func(e *experiment) keepAlive()  {
 	for ; ;  {
 		alive := IpcData{
 			cedType:Ping,
@@ -170,11 +169,11 @@ func(e *experment) keepAlive()  {
 		time.Sleep(1 * time.Second)
 	}
 }
-func (e *experment) getS3File() string{
+func (e *experiment) getS3File() string{
 
 	return "/Users/shykoe/go/src/auto/mock/20191223/s3"
 }
-func (e *experment) run(){
+func (e *experiment) run(){
 	cmd := exec.Command("python", "-m", "nni", "--tuner_class_name", e.tunerType, "--tuner_args", e.tunerArgs)
 	cmd.Env = os.Environ()
 	r1, w1, err := os.Pipe()
@@ -244,13 +243,13 @@ func (e *experment) run(){
 		time.Sleep(2*time.Second)
 	}
 }
-func (e *experment) send(data IpcData) error{
+func (e *experiment) send(data IpcData) error{
 	log.Info("send", data.cedType, data.cmdContent)
 	byteContent := data.decode()
 	_, err := e.write4out.Write(byteContent)
 	return err
 }
-func (e *experment) close(){
+func (e *experiment) close(){
 	if e.tuner!=nil{
 		e.tuner.Process.Kill()
 	}
