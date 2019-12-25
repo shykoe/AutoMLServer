@@ -23,7 +23,7 @@ var (
 	PORT     string
 	DATABASE string
 	Count int64
-	S3HOST = "http://s3test.sumeru.mig"
+	S3HOST string
 	S3AK string
 	S3SK string
 	TMPPATH string
@@ -63,6 +63,7 @@ func initDBAndConfig() error{
 	TMPPATH = config["tmpPath"]
 	BOREURL = config["boreUrl"]
 	BUCKET = config["bucket"]
+	S3HOST = config["s3host"]
 	dsn := fmt.Sprintf("%s:%s@%s(%s:%s)/%s",USERNAME,PASSWORD,NETWORK,SERVER,PORT,DATABASE)
 	DB, err = sql.Open("mysql",dsn)
 	if err!=nil{
