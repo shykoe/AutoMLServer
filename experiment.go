@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"github.com/otiai10/copy"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
 	"reflect"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -55,23 +57,28 @@ func (e *experiment) listen(){
 		e.output <- struct{}{}
 	}
 }
-func (e *experiment) prepareTrial(trialId string, workSpace string ,params *map[string]interface{}) (string, error){
+func (e *experiment) prepareTrial(trialId string, workSpace string ,params *map[string]interface{}) (*trial, error){
 	trialPath := path.Join(TMPPATH, trialId)
 	var trialTar string = fmt.Sprintf("%s/%s.tar",TMPPATH ,trialId )
 	err := copy.Copy(e.workDir, trialPath)
 	if err != nil{
 		log.Error(err)
-		return "", err
+		return nil, err
 	}
 	log.Info("write params file")
 	f, err := os.Create(path.Join(trialPath,"automl.py"))
 	if err!=nil{
 		log.Error(err)
-		return "", err
+		return nil, err
 	}
 	defer f.Close()
+	//miniBatch param is in bore.json, save it
+	var miniBatch int = 0
 	for k,v := range *params{
 		var innerData string
+		if k == "minibatch"{
+			miniBatch = v.(int)
+		}
 		if reflect.TypeOf(v).String() == "string"{
 			innerData = fmt.Sprintf("%s='%s'",k,v)
 		}else{
@@ -81,12 +88,55 @@ func (e *experiment) prepareTrial(trialId string, workSpace string ,params *map[
 	}
 	f.Close()
 
-	err = createTar(trialPath, trialTar)
+	//modify bore.json
+	numerousJson := make(map[string] string)
+
+	jsonFile, err := os.Open(path.Join(trialPath, "numerous.json"))
 	if err!=nil{
-		return "",err
+		return nil, err
+	}
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	err = json.Unmarshal([]byte(byteValue), &numerousJson)
+	if err!=nil{
+		return nil, err
+	}
+	defer jsonFile.Close()
+
+	for k, v := range numerousJson{
+		if k == "minibatch" && miniBatch!= 0{
+			v = strconv.Itoa(miniBatch)
+		}
+		if k == "model_name"{
+			v = trialId
+		}else{
+			//avoid unused, why?
+			v = v
+		}
 	}
 
-	return trialTar, nil
+	jsonStr,err := json.Marshal(numerousJson)
+	if err!=nil{
+		log.Error(err)
+		return nil, err
+	}
+	err = ioutil.WriteFile(path.Join(trialPath, "numerous.json"), jsonStr, os.ModePerm)
+	if err!=nil{
+		return nil, err
+	}
+	err = createTar(trialPath, trialTar)
+	if err!=nil{
+		return nil,err
+	}
+	job := &trial{
+		jobId:        trialId,
+		startTime:    time.Now(),
+		parameters:   *params,
+		jobFile:      trialTar,
+		status:       READY,
+		expId: e.expId,
+		boreFile: e.boreFile,
+	}
+	return job, nil
 }
 func (e *experiment) work()  {
 	for ; ;  {
@@ -114,7 +164,6 @@ func (e *experiment) work()  {
 							return
 						}
 						jobId := fmt.Sprintf("%s_%08.0f", e.expName, ind)
-
 						tarFile,err := e.prepareTrial(jobId, e.workDir, &params)
 						if err!= nil{
 							log.Error(err)

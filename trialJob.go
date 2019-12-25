@@ -18,12 +18,6 @@ const (
 	ERROR = "ERROR"
 	USERCANCEL = "USERCANCEL"
 )
-var(
-	//boreUrl = "http://schedulerproxy.wsd.com/api/v1/app/task/submit"
-	boreUrl = "http://localhost:12123"
-
-	jobUrl = "http://localhost:12123/job"
-)
 type trial struct {
 	jobId        string
 	startTime    time.Time
