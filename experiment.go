@@ -4,13 +4,16 @@ import (
 	"container/list"
 	"encoding/json"
 	"fmt"
+	"github.com/otiai10/copy"
 	log "github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
+	"path"
+	"reflect"
 	"sync"
 	"time"
 )
-
+const tmpRoot = "/Users/shykoe/go/src/auto/mock/tmp"
 type experment struct {
 	write4out *os.File
 	read4nni *os.File
@@ -25,11 +28,13 @@ type experment struct {
 	searchSpace string
 	parallel int
 	maxTrialNum int
-	expId string
-	S3 string
+	expName string
+	workDir string
 	tuner *exec.Cmd
 	jobFile string
 	runner string
+	expId int64
+	currentNum int
 }
 func (e *experment) listen(){
 	for ; ;  {
@@ -49,6 +54,39 @@ func (e *experment) listen(){
 		}
 		e.output <- struct{}{}
 	}
+}
+func (e *experment) prepareTrial(trialId string, workSpace string ,params *map[string]interface{}) (string, error){
+	trialPath := path.Join(workSpace, trialId)
+	var trialTar string = fmt.Sprintf("%s/%s.tar",workSpace ,trialId )
+	err := copy.Copy(e.workDir, trialPath)
+	if err != nil{
+		log.Error(err)
+		return "", err
+	}
+	log.Info("write params file")
+	f, err := os.Create(path.Join(trialPath,"automl.py"))
+	if err!=nil{
+		log.Error(err)
+		return "", err
+	}
+	defer f.Close()
+	for k,v := range *params{
+		var innerData string
+		if reflect.TypeOf(v).String() == "string"{
+			innerData = fmt.Sprintf("%s='%s'",k,v)
+		}else{
+			innerData = fmt.Sprintf("%s=%g",k, v)
+		}
+		f.WriteString(innerData+"\n")
+	}
+	f.Close()
+
+	err = createTar(trialPath, trialTar)
+	if err!=nil{
+		return "",err
+	}
+
+	return trialTar, nil
 }
 func (e *experment) work()  {
 	for ; ;  {
@@ -75,13 +113,21 @@ func (e *experment) work()  {
 							e.close()
 							return
 						}
+						jobId := fmt.Sprintf("%s_%08.0f", e.expName, ind)
+
+						tarFile,err := e.prepareTrial(jobId, e.workDir, &params)
+						if err!= nil{
+							log.Error(err)
+							e.close()
+							return
+						}
 						job := &trial{
-							jobId:        fmt.Sprintf("%s_%f", e.expId, ind),
+							jobId:        jobId,
 							startTime:    time.Now(),
 							parameters:   params,
-							jobFile:      e.jobFile,
+							jobFile:      tarFile,
 							status:       READY,
-							experimentId: e.expId,
+							expId: e.expId,
 						}
 						go job.run()
 						e.trials.PushBack(job)
@@ -125,8 +171,8 @@ func(e *experment) keepAlive()  {
 	}
 }
 func (e *experment) getS3File() string{
-	
-	return "/Users/shykoe/go/src/auto/mock/numerous/20191205"
+
+	return "/Users/shykoe/go/src/auto/mock/20191223/s3"
 }
 func (e *experment) run(){
 	cmd := exec.Command("python", "-m", "nni", "--tuner_class_name", e.tunerType, "--tuner_args", e.tunerArgs)
@@ -152,7 +198,7 @@ func (e *experment) run(){
 	e.tuner = cmd
 	go cmd.Run()
 	go e.listen()
-	e.getS3File()
+	e.jobFile = e.getS3File()
 	//go e.keepAlive()
 	go e.work()
 	initExp := IpcData{
@@ -160,17 +206,26 @@ func (e *experment) run(){
 		cmdContent:e.searchSpace,
 	}
 	e.send(initExp)
-	_, err = DB.Exec("insert INTO t_experiment_info(`experiment_name`, `runner`, `search_space`, `start_time`," +
+	result, err := DB.Exec("insert INTO t_experiment_info(`experiment_name`, `runner`, `search_space`, `start_time`," +
 							" `trial_concurrency`, `max_trial_num`, `algorithm_type`, `algorithm_content`, `status`) values(?,?,?,?,?,?,?,?,?) ",
-							e.expId, e.runner, e.searchSpace, time.Now(), e.parallel, e.maxTrialNum, e.tunerType, e.tunerArgs, READY  )
+							e.expName, e.runner, e.searchSpace, time.Now(), e.parallel, e.maxTrialNum, e.tunerType, e.tunerArgs, READY  )
 	if err!= nil{
 		log.Error(err)
 		e.close()
+		return
 	}
+	e.expId, err = result.LastInsertId()
+	if err!= nil{
+		log.Error(err)
+		e.close()
+		return
+	}
+	e.currentNum = 0
+	var total int
 	for ; ;  {
-		if e.trials.Len() < e.parallel{
+		if e.currentNum < e.parallel && total < e.maxTrialNum{
 			//should add jobs
-			need := e.parallel - e.trials.Len()
+			need := e.parallel - e.currentNum
 			for i:=0; i<need ;i++  {
 				initExp := IpcData{
 					cedType:RequestTrialJobs,
@@ -181,6 +236,8 @@ func (e *experment) run(){
 					e.close()
 					return
 				}
+				e.currentNum += 1
+				total += 1
 			}
 
 		}

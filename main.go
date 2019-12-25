@@ -26,7 +26,7 @@ var (
 )
 type AddExpJson struct {
 	User     string `form:"user" json:"user" xml:"user"  binding:"required"`
-	S3 string `form:"S3" json:"S3" xml:"S3" binding:"required"`
+	WorkDir string `form:"workDir" json:"workDir" xml:"workDir" binding:"required"`
 	TunerType string `form:"tunerType" json:"tunerType" xml:"tunerType" binding:"required"`
 	TunerArgs string `form:"tunerArgs" json:"tunerArgs" xml:"tunerArgs" binding:"required"`
 	SearchSpace string `form:"SearchSpace" json:"SearchSpace" xml:"SearchSpace" binding:"required"`
@@ -34,7 +34,7 @@ type AddExpJson struct {
 	MaxTrialNum int `form:"MaxTrialNum" json:"MaxTrialNum" xml:"MaxTrialNum" `
 }
 func (a *AddExpJson) toString() string{
-	str := fmt.Sprintf("User: %s\nS3: %s\nTunerType: %s\nTunerArgs: %s\nSearchSpace: %s\nParallel: %d", a.User, a.S3, a.TunerType ,a.TunerArgs, a.SearchSpace, a.Parallel)
+	str := fmt.Sprintf("User: %s\nWorkDir: %s\nTunerType: %s\nTunerArgs: %s\nSearchSpace: %s\nParallel: %d", a.User, a.WorkDir, a.TunerType ,a.TunerArgs, a.SearchSpace, a.Parallel)
 	return str
 }
 func initDB() error{
@@ -97,8 +97,8 @@ func main() {
 			output: make(chan struct{}),
 			searchSpace:json.SearchSpace,
 			parallel:parallelNum,
-			expId:ids,
-			S3:json.S3,
+			expName:ids,
+			workDir:json.WorkDir,
 			runner:json.User,
 			maxTrialNum:json.MaxTrialNum,
 		}

@@ -33,7 +33,8 @@ type trial struct {
 	jobFile      string
 	status       string
 	s3           string
-	experimentId string
+	expId int64
+
 }
 func (t *trial) callBore(fileRoot string) error{
 
@@ -73,6 +74,9 @@ func (t *trial) callBore(fileRoot string) error{
 	log.Info("http Body:",  string(response))
 	return nil
 }
+func (t *trial) getMetric(){
+
+}
 func (t *trial) getStatus(){
 	//for ; ;  {
 	//	req, err := http.NewRequest("GET",jobUrl,nil)
@@ -85,8 +89,8 @@ func (t *trial)run()  {
 		t.status = ERROR
 	}
 	_,err = DB.Exec("INSERT INTO `automl`.`t_trials_info`(`trial_name`," +
-		"`s3_path`,`parameter`,`start_time`,`end_time`,`status`,`experiment_id`) VALUES ( ?, ?, ?, ?, ?, ?, ? ) ",
-		t.jobId, t.s3, paraStr, time.Now(), nil, t.status,  t.experimentId )
+		"`s3_path`,`parameter`,`start_time`,`end_time`,`status`,`experiment_id`) VALUES ( ?, ?, ?, ?, ?, ?, ? )  ",
+		t.jobId, t.s3, paraStr, time.Now(), nil, t.status,  t.expId )
 	if err!=nil{
 		log.Error(err)
 		t.close()
