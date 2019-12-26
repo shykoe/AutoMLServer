@@ -1,0 +1,58 @@
+{
+  "worker_num": "16",
+  "data_cluster_name": "null",
+  "program_urls": ["http://s3sz.sumeru.mig/algbaseserviceapi:user_code_repository/numerous_v2/tar/20191223/814959378/numerous_v2_beta.20191223.814959378.tar"],
+  "task_source": "venus",
+  "resource_group_name": "RG_zhongtai_wuliang_kdnews",
+  "ps_args": "",
+  "worker_resource": {
+    "driver": {
+      "memory": "2048",
+      "cpus_num": "1"
+    },
+    "cpus": {
+      "memory": "10240",
+      "cpus_num": "4"
+    },
+    "gpus": {
+      "memory": "0",
+      "gpus_num": "0",
+      "cpus_num": "0"
+    },
+    "resource_option": "1"
+  },
+  "program_args": "--config=./numerous.json",
+  "tensorboard": "",
+  "s3_info": {
+    "endpoint": "",
+    "access_key": "",
+    "secret_key": "",
+    "bEncrypt": false
+  },
+  "appinstance_name": "<appinstance_name>",
+  "container": {
+    "volume": [{
+      "area": "",
+      "container_path": "",
+      "uid": ""
+    }],
+    "docker": {
+      "image": "registry2sz.sumeru.mig/tafimage/prajna_ml_bore:v20190827111126303"
+    }
+  },
+  "priority": "low",
+  "worker_args": "",
+  "skey": "73ec3f1b-cc4c-4b03-9314-b806e4b09b5b",
+  "ps_num": "7",
+  "run_mode": "cluster",
+  "program_name": "demo.py",
+  "task_type": "ps",
+  "app_name": "n-md-kdrecstratstreamnew-kyletu-test-model-offline-copy34",
+  "ps_resource": {
+    "memory": "10240",
+    "cpus_num": "4"
+  },
+  "operators": "kwinsheng",
+  "framework_name": "PS_Lite_Test2",
+  "alarm": "0"
+}
