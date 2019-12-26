@@ -7,8 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"time"
@@ -29,6 +27,10 @@ var (
 	TMPPATH string
 	BOREURL string
 	BUCKET string
+	SKEY string
+	BORELOGURL string
+	BORESTATUSURL string
+	DEV string
 )
 type AddExpJson struct {
 	User     string `form:"user" json:"user" xml:"user"  binding:"required"`
@@ -39,45 +41,21 @@ type AddExpJson struct {
 	Parallel int `form:"Parallel" json:"Parallel" xml:"Parallel" `
 	MaxTrialNum int `form:"MaxTrialNum" json:"MaxTrialNum" xml:"MaxTrialNum" `
 	BoreFile string `form:"BoreFile" json:"BoreFile" xml:"BoreFile" `
+	OptimizeParam string `form:"OptimizeParam" json:"OptimizeParam" xml:"OptimizeParam"`
 }
 func (a *AddExpJson) toString() string{
 	str := fmt.Sprintf("User: %s\nWorkDir: %s\nTunerType: %s\nTunerArgs: %s\nSearchSpace: %s\nParallel: %d", a.User, a.WorkDir, a.TunerType ,a.TunerArgs, a.SearchSpace, a.Parallel)
 	return str
 }
-func initDBAndConfig() error{
-	var err error
-	config := make(map[string] string)
-	data, err := ioutil.ReadFile("./config.yml")
-	err = yaml.Unmarshal(data,&config)
-	if err != nil{
-		log.Fatal(err)
-		return err
-	}
-	USERNAME = config["username"]
-	PASSWORD = config["password"]
-	SERVER = config["server"]
-	DATABASE = config["database"]
-	PORT = config["port"]
-	S3AK = config["accessKey"]
-	S3SK = config["secretKey"]
-	TMPPATH = config["tmpPath"]
-	BOREURL = config["boreUrl"]
-	BUCKET = config["bucket"]
-	S3HOST = config["s3host"]
-	dsn := fmt.Sprintf("%s:%s@%s(%s:%s)/%s",USERNAME,PASSWORD,NETWORK,SERVER,PORT,DATABASE)
-	DB, err = sql.Open("mysql",dsn)
-	if err!=nil{
-		log.Fatal(err)
-		return err
-	}
-	DB.SetConnMaxLifetime(100*time.Second)  //最大连接周期，超过时间的连接就close
-	DB.SetMaxOpenConns(1000)//设置最大连接数
-	DB.SetMaxIdleConns(0) //设置闲置连接数
-	return nil
-}
+
 func main() {
 	log.SetReportCaller(true)
-	err := initDBAndConfig()
+	err := initConfig()
+	if err!=nil{
+		log.Fatal(err)
+		return
+	}
+	err = initDB()
 	if err!=nil{
 		log.Fatal(err)
 		return
@@ -103,12 +81,18 @@ func main() {
 		}else{
 			parallelNum = 1
 		}
+		ok := IsValidOptimizeParam(json.OptimizeParam)
+		if !ok{
+			context.JSON(http.StatusOK, gin.H{"status": "error", "msg":"Error in OptimizeParam!"})
+			return
+		}
 		newExp :=  &experiment{
 			tunerType:json.TunerType,
 			tunerArgs:json.TunerArgs,
 			ll : list.New(),
 			trials : list.New(),
 			output: make(chan struct{}),
+			trialChan: make(chan string, 100),
 			searchSpace:json.SearchSpace,
 			parallel:parallelNum,
 			expName:ids,
@@ -116,6 +100,7 @@ func main() {
 			runner:json.User,
 			maxTrialNum:json.MaxTrialNum,
 			boreFile: json.BoreFile,
+			optimizeParam: json.OptimizeParam,
 		}
 		go newExp.run()
 		exp[ids] = newExp

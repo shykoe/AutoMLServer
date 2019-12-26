@@ -2,24 +2,25 @@ package main
 
 import (
 	"bytes"
+	"container/list"
 	"encoding/json"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 )
 
 const (
 	READY      = "READY"
 	RUNNING    = "RUNNING"
-	DONE       = "DONE"
+	SUCCESS    = "success"
 	ERROR      = "ERROR"
 	USERCANCEL = "USERCANCEL"
 )
 
 type trial struct {
+	ind int
 	jobId      string
 	startTime  time.Time
 	endTime    time.Time
@@ -29,6 +30,9 @@ type trial struct {
 	expId      int64
 	boreFile   string
 	endDir     string
+	metricll *list.List
+	exp *experiment
+	dbId int64
 }
 
 func (t *trial) callBore(boreFile string) error {
@@ -70,55 +74,74 @@ func (t *trial) callBore(boreFile string) error {
 	return nil
 }
 func (t *trial) getMetric() error{
-	const url = "http://localhost:8111/getlog"
-	var current int
-	const everyLen = 100
-	var Err int = 0
-	var maxErr int = 10
+	var offset int = 0
+	var everyLen  = 1000
 	for ; ;  {
-		req, err := http.NewRequest("GET",url,nil)
-		if err!=nil{
-			log.Error(err)
-			return err
+		if t.status == SUCCESS || t.status == ERROR || t.status == USERCANCEL{
+			return nil
 		}
-		q := req.URL.Query()
-		q.Add("start", strconv.Itoa(current) )
-		q.Add("length", strconv.Itoa(everyLen))
-		req.URL.RawQuery = q.Encode()
-		resp, err := http.DefaultClient.Do(req)
-		if err!=nil{
-			if Err < maxErr{
-				log.Error(err)
-				Err += 1
-				continue
+		Pos, result, str, _ :=getBoreLog(t.jobId,"driver", "E_STDOUT", offset, everyLen )
+		log.Info("offset: ", offset)
+		if str == ""{
+			time.Sleep(time.Second*5)
+			continue
+		}
+		if offset == Pos{
+			everyLen *= 2
+			continue
+		}
+		for _,str :=range result{
+			currentMetric :=parseMetric(str)
+			if currentMetric!=nil{
+				if currentMetric.dataInfo == t.endDir{
+					currentMetric.metricType = "FINAL"
+				}else{
+					currentMetric.metricType = "PERIODICAL"
+				}
+				err := currentMetric.store(t.dbId)
+				if err!=nil{
+					panic(err)
+				}
+				t.metricll.PushBack(currentMetric)
+				time.Sleep(2*time.Second)
+				err = t.exp.updateMetric(currentMetric, t.ind)
+				if err!=nil{
+					return err
+				}
 			}
-			return err
 		}
-		var data = make(map[string] string)
-		response, _ := ioutil.ReadAll(resp.Body)
-		if err = json.Unmarshal(response,&data); err!=nil{
-			log.Error(err)
-			return err
-		}
-		logStr := []rune(data["data"])
-		for ; ;  {
-			aLen := runeSearch(logStr,"\n")
-			if aLen == -1{
-				break
-			}
-			current += aLen
-			log.Info(string(logStr[:aLen]))
-			logStr = logStr[aLen+1:]
-		}
-
-
-
+		offset = Pos
 	}
+	return nil
+}
+func (t *trial) updateStatus(status string) error{
+	_, err := DB.Exec("UPDATE `t_trials_info` SET `status` = ? WHERE  `trial_id` = ?", status, t.dbId)
+	if err!= nil{
+		return err
+	}
+	return nil
 }
 func (t *trial) getStatus() {
-	//for ; ;  {
-	//	req, err := http.NewRequest("GET",jobUrl,nil)
-	//}
+	for ; ;  {
+		statusData, err := getBoreStatus(t.jobId)
+		status := parseStatus(statusData["appinstance_status"])
+		err = t.updateStatus(status)
+		if err!=nil{
+			time.Sleep(5*time.Second)
+			continue
+		}
+		t.status = status
+		if status == ERROR || status == USERCANCEL{
+			t.exp.trialChan <- t.jobId
+			return
+		}else if status == SUCCESS{
+			//wait for update metric
+			time.Sleep(10*time.Second)
+			t.exp.trialChan <- t.jobId
+			return
+		}
+		time.Sleep(2*time.Second)
+	}
 }
 func (t *trial) run() {
 	paraStr, err := json.Marshal(t.parameters)
@@ -126,7 +149,7 @@ func (t *trial) run() {
 		log.Error(err)
 		t.status = ERROR
 	}
-	_, err = DB.Exec("INSERT INTO `t_trials_info`(`trial_name`,"+
+	result, err := DB.Exec("INSERT INTO `t_trials_info`(`trial_name`,"+
 		"`s3_path`,`parameter`,`start_time`,`end_time`,`status`,`experiment_id`) VALUES ( ?, ?, ?, ?, ?, ?, ? )  ",
 		t.jobId, t.s3, paraStr, time.Now(), nil, t.status, t.expId)
 	if err != nil {
@@ -134,8 +157,16 @@ func (t *trial) run() {
 		t.close()
 		return
 	}
+	t.dbId, err = result.LastInsertId()
+	if err!= nil{
+		log.Error(err)
+		t.close()
+		return
+	}
 	log.Info("jobId: ", t.jobId, "\nstartTime", t.startTime.String(), "\nparameters:", t.parameters, "\ns3:", t.s3)
 	err = t.callBore(t.boreFile)
+	go t.getStatus()
+	go t.getMetric()
 	if err != nil {
 		log.Error("call bore error: ", err)
 		t.status = ERROR

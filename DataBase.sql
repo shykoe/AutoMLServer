@@ -13,6 +13,7 @@ CREATE TABLE `t_experiment_info` (
     `algorithm_type` varchar(100) NOT NULL ,
     `algorithm_content` varchar(1000) NOT NULL ,
     `status` varchar(100) NOT NULL,
+    `optimize_param` varchar(100) DEFAULT NULL,
     KEY `experiment_name` (`experiment_name`),
   PRIMARY KEY (`experiment_id`)
 
@@ -40,9 +41,14 @@ DROP TABLE IF EXISTS `t_metric_info`;
 CREATE TABLE `t_metric_info` (
 
     `metric_id` int(11) NOT NULL AUTO_INCREMENT,
-    `data` varchar(100) NOT NULL ,
+	`dataInfo` varchar(100)  NULL,
+	`loss` double DEFAULT NULL,
+	`auc` double DEFAULT NULL,
+	`predictAvg` double DEFAULT NULL,
+	`realAvg` double DEFAULT NULL,
+	`copc` double DEFAULT NULL,
+	`metricType` varchar(100) NOT NULL ,
     `update_time` datetime DEFAULT NULL,
-    `status` varchar(100) NOT NULL,
     `trial_id` int(11) NOT NULL,
     `sequence_id` int(11)  NULL,
     KEY `trial_id` (`trial_id`),

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
@@ -24,15 +25,25 @@ const (
 	NoMoreTrialJobs = "NO"
 	KillTrialJob = "KI"
 )
+type ReportData struct {
+	ParameterId string  `json:"parameter_id"`
+	TrialJobId  string  `json:"trial_job_id"`
+	Type        string  `json:"type"`
+	Sequence    int     `json:"sequence"`
+	Value       float32 `json:"value"`
+}
+func (r *ReportData) toJsonStr() ([]byte, error) {
+	return json.Marshal(r)
+}
 type IpcData struct{
-	cedType    string
-	cmdLength  int
-	cmdContent string
-	ipcRemain  string
+	CedType    string
+	CmdLength  int
+	CmdContent string
+	IpcRemain  string
 }
 func (d *IpcData) decode() []byte{
-	d.cmdLength = len(d.cmdContent)
-	content := fmt.Sprintf("%s%06d%s",d.cedType, d.cmdLength, d.cmdContent)
+	d.CmdLength = len(d.CmdContent)
+	content := fmt.Sprintf("%s%06d%s",d.CedType, d.CmdLength, d.CmdContent)
 	log.Info("cmd decode ", content)
 	return []byte(content)
 }
