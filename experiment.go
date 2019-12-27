@@ -257,7 +257,7 @@ func (e *experiment) get() *IpcData {
 }
 func (e *experiment) keepAlive() {
 	for {
-		log.Info("KeepAlive: ", e.status)
+		log.Info("KeepAlive: ", e.status, "running trials: ", e.currentNum, "has run ", e.runNum, "max: ", e.maxTrialNum)
 		if e.status != RUNNING {
 			return
 		}
