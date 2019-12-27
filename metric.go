@@ -6,17 +6,18 @@ import (
 )
 
 type metric struct {
-	count int
-	ver string
-	dataInfo string
-	loss float32
-	auc float32
+	count      int
+	ver        string
+	dataInfo   string
+	loss       float32
+	auc        float32
 	predictAvg float32
-	realAvg float32
-	copc float32
+	realAvg    float32
+	copc       float32
 	metricType string
 }
-func (m *metric) store(trialDBId int64) error{
+
+func (m *metric) store(trialDBId int64) error {
 
 	_, err := DB.Exec("insert INTO t_metric_info(`loss`, `auc`, `predictAvg`, `realAvg`,"+
 		" `copc`, `metricType`, `update_time`, `trial_id`, `sequence_id`) values(?,?,?,?,?,?,?,?,?) ",

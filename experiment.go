@@ -28,11 +28,11 @@ type experiment struct {
 	ll            *list.List
 	trials        *list.List
 	output        chan struct{}
-	trialChan		chan string
+	trialChan     chan string
 	mu            sync.RWMutex
 	searchSpace   string
 	parallel      int
-	runNum int
+	runNum        int
 	maxTrialNum   int
 	expName       string
 	workDir       string
@@ -43,13 +43,14 @@ type experiment struct {
 	currentNum    int
 	boreFile      string
 	optimizeParam string
-	status  string
+	status        string
 }
-func (e *experiment) checkAlive(){
-	for ; ;  {
-		time.Sleep(3*time.Second)
+
+func (e *experiment) checkAlive() {
+	for {
+		time.Sleep(3 * time.Second)
 		e.mu.Lock()
-		if e.currentNum == 0 && e.runNum == e.maxTrialNum{
+		if e.currentNum == 0 && e.runNum == e.maxTrialNum {
 			e.status = SUCCESS
 			e.close()
 			return
@@ -62,7 +63,7 @@ func (e *experiment) listen() {
 		out := make([]byte, 10000)
 		_, err := e.read4out.Read(out)
 		defer func() {
-			if err:= recover();err!=nil{
+			if err := recover(); err != nil {
 				log.Info(err)
 				return
 			}
@@ -165,7 +166,7 @@ func (e *experiment) prepareTrial(trialId string, params *map[string]interface{}
 		expId:      e.expId,
 		boreFile:   e.boreFile,
 		endDir:     endDir,
-		s3:         fmt.Sprintf("%s/%s",BUCKET,s3Path) ,
+		s3:         fmt.Sprintf("%s/%s", BUCKET, s3Path),
 		metricll:   list.New(),
 		exp:        e,
 	}
@@ -224,15 +225,15 @@ func (e *experiment) work() {
 			}
 		case closeId := <-e.trialChan:
 			var item *list.Element
-			for t := e.trials.Front(); t!= nil; t= t.Next(){
+			for t := e.trials.Front(); t != nil; t = t.Next() {
 				tmp := t.Value.(*trial)
-				if tmp.jobId == closeId{
+				if tmp.jobId == closeId {
 					tmp.close()
 					item = t
 					break
 				}
 			}
-			if item != nil{
+			if item != nil {
 				e.mu.Lock()
 				e.trials.Remove(item)
 				e.currentNum -= 1
@@ -257,7 +258,7 @@ func (e *experiment) get() *IpcData {
 func (e *experiment) keepAlive() {
 	for {
 		log.Info("KeepAlive: ", e.status)
-		if e.status != RUNNING{
+		if e.status != RUNNING {
 			return
 		}
 		alive := IpcData{
@@ -269,7 +270,7 @@ func (e *experiment) keepAlive() {
 			break
 		}
 		defer func() {
-			if err := recover(); err!=nil{
+			if err := recover(); err != nil {
 				log.Error(err)
 				return
 			}
@@ -331,7 +332,7 @@ func (e *experiment) run() {
 	e.currentNum = 0
 
 	for {
-		if e.runNum == e.maxTrialNum && e.status == SUCCESS{
+		if e.runNum == e.maxTrialNum && e.status == SUCCESS {
 			log.Info("Job Done!")
 			e.close()
 			return

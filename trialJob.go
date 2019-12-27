@@ -20,7 +20,7 @@ const (
 )
 
 type trial struct {
-	ind int
+	ind        int
 	jobId      string
 	startTime  time.Time
 	endTime    time.Time
@@ -30,9 +30,9 @@ type trial struct {
 	expId      int64
 	boreFile   string
 	endDir     string
-	metricll *list.List
-	exp *experiment
-	dbId int64
+	metricll   *list.List
+	exp        *experiment
+	dbId       int64
 }
 
 func (t *trial) callBore(boreFile string) error {
@@ -73,75 +73,75 @@ func (t *trial) callBore(boreFile string) error {
 	log.Info("http Body:", string(response))
 	return nil
 }
-func (t *trial) getMetric() error{
+func (t *trial) getMetric() error {
 	var offset int = 0
-	var everyLen  = 1000
-	for ; ;  {
-		if t.status == SUCCESS || t.status == ERROR || t.status == USERCANCEL{
+	var everyLen = 1000
+	for {
+		if t.status == SUCCESS || t.status == ERROR || t.status == USERCANCEL {
 			return nil
 		}
-		Pos, result, str, _ :=getBoreLog(t.jobId,"driver", "E_STDOUT", offset, everyLen )
+		Pos, result, str, _ := getBoreLog(t.jobId, "driver", "E_STDOUT", offset, everyLen)
 		log.Info("offset: ", offset)
-		if str == ""{
-			time.Sleep(time.Second*5)
+		if str == "" {
+			time.Sleep(time.Second * 5)
 			continue
 		}
-		if offset == Pos{
+		if offset == Pos {
 			everyLen *= 2
 			continue
 		}
-		for _,str :=range result{
-			currentMetric :=parseMetric(str)
-			if currentMetric!=nil{
-				if currentMetric.dataInfo == t.endDir{
+		for _, str := range result {
+			currentMetric := parseMetric(str)
+			if currentMetric != nil {
+				if currentMetric.dataInfo == t.endDir {
 					currentMetric.metricType = "FINAL"
-				}else{
+				} else {
 					currentMetric.metricType = "PERIODICAL"
 				}
 				err := currentMetric.store(t.dbId)
-				if err!=nil{
+				if err != nil {
 					panic(err)
 				}
 				t.metricll.PushBack(currentMetric)
-				time.Sleep(2*time.Second)
+				time.Sleep(2 * time.Second)
 				err = t.exp.updateMetric(currentMetric, t.ind)
-				if err!=nil{
+				if err != nil {
 					return err
 				}
 			}
 		}
 		offset = Pos
-		time.Sleep(1*time.Second)
+		time.Sleep(1 * time.Second)
 	}
 	return nil
 }
-func (t *trial) updateStatus(status string) error{
+func (t *trial) updateStatus(status string) error {
 	_, err := DB.Exec("UPDATE `t_trials_info` SET `status` = ? WHERE  `trial_id` = ?", status, t.dbId)
-	if err!= nil{
+	if err != nil {
 		return err
 	}
 	return nil
 }
 func (t *trial) getStatus() {
-	for ; ;  {
+	for {
 		statusData, err := getBoreStatus(t.jobId)
 		status := parseStatus(statusData["appinstance_status"])
 		err = t.updateStatus(status)
-		if err!=nil{
-			time.Sleep(5*time.Second)
+		if err != nil {
+			time.Sleep(5 * time.Second)
 			continue
 		}
 		t.status = status
-		if status == ERROR || status == USERCANCEL{
+		if status == ERROR || status == USERCANCEL {
 			t.exp.trialChan <- t.jobId
 			return
-		}else if status == SUCCESS{
+		} else if status == SUCCESS {
 			//wait for update metric
-			time.Sleep(10*time.Second)
+			time.Sleep(10 * time.Second)
 			t.exp.trialChan <- t.jobId
 			return
 		}
-		time.Sleep(2*time.Second)
+		time.Sleep(2 * time.Second)
 	}
 }
 func (t *trial) run() {
@@ -159,7 +159,7 @@ func (t *trial) run() {
 		return
 	}
 	t.dbId, err = result.LastInsertId()
-	if err!= nil{
+	if err != nil {
 		log.Error(err)
 		t.close()
 		return
