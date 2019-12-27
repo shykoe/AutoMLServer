@@ -86,7 +86,7 @@ func (t *trial) getMetric() error {
 			return nil
 		}
 		Pos, result, str, _ := getBoreLog(t.jobId, "driver", "E_STDOUT", offset, everyLen)
-		log.Info("offset: ", offset)
+		//log.Info("offset: ", offset)
 		if str == "" {
 			time.Sleep(time.Second * 5)
 			continue
