@@ -63,6 +63,7 @@ func (e *experiment) listen() {
 		_, err := e.read4out.Read(out)
 		defer func() {
 			if err:= recover();err!=nil{
+				log.Info(err)
 				return
 			}
 		}()
@@ -255,6 +256,7 @@ func (e *experiment) get() *IpcData {
 }
 func (e *experiment) keepAlive() {
 	for {
+		log.Info("KeepAlive: ", e.status)
 		if e.status != RUNNING{
 			return
 		}
@@ -268,6 +270,7 @@ func (e *experiment) keepAlive() {
 		}
 		defer func() {
 			if err := recover(); err!=nil{
+				log.Error(err)
 				return
 			}
 		}()
