@@ -124,9 +124,9 @@ func parseMetric(data string) *metric{
 		return m
 	}
 }
-func initConfig() error{
+func initConfig( configPath string) error{
 	config := make(map[string] string)
-	data, err := ioutil.ReadFile("./config.yml")
+	data, err := ioutil.ReadFile(configPath)
 	err = yaml.Unmarshal(data,&config)
 	if err != nil{
 		log.Fatal(err)
@@ -164,6 +164,7 @@ func getBoreLog(appName string, containerName string, logType string, offset int
 	q.Add("skey", SKEY)
 	req.URL.RawQuery = q.Encode()
 	resp, err := http.Get(req.URL.String())
+	log.Info("getBoreLog Url: ", req.URL.String())
 	//resp, err := http.DefaultClient.Do(req)
 	var data = make(map[string] interface{})
 	response, _ := ioutil.ReadAll(resp.Body)

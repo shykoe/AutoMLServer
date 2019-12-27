@@ -13,7 +13,7 @@ func TestCreateTar(t *testing.T){
 func TestUploadS3(t *testing.T){
 }
 func TestGetBoreStatus(t *testing.T){
-	initConfig()
+	initConfig("./config.yml")
 	data, _ := getBoreStatus("t_nni_kwinsheng_413687274_00000000")
 	log.Info(data)
 }
@@ -23,7 +23,7 @@ func TestParseMetric(t *testing.T){
 	log.Info(metric)
 }
 func TestGetBoreLog(t *testing.T)  {
-	initConfig()
+	initConfig("./config.yml")
 	//log.SetReportCaller(true)
 	var offset int = 0
 	var everyLen  = 1000

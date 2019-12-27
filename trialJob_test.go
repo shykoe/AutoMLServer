@@ -14,9 +14,9 @@ func TestTrialJob(t *testing.T) {
 	job.run()
 }
 func TestGetMetric(t *testing.T) {
-	log.SetReportCaller(true)
+	initConfig("./config.yml")
 	job := &trial{
-		jobId:     "test",
+		jobId:     "kwinsheng_1511407985_00000000",
 		startTime: time.Now(),
 	}
 	job.getMetric()

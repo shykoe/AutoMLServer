@@ -3,6 +3,7 @@ package main
 import (
 	"container/list"
 	"database/sql"
+	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
@@ -49,8 +50,10 @@ func (a *AddExpJson) toString() string{
 }
 
 func main() {
+	port := flag.Int("port",8989,"Server port")
+	configFile := flag.String("config", "./config.yml", "config file")
 	log.SetReportCaller(true)
-	err := initConfig()
+	err := initConfig(*configFile)
 	if err!=nil{
 		log.Fatal(err)
 		return
@@ -64,10 +67,6 @@ func main() {
 	r := gin.Default()
 	r.POST("/addExp", func(context *gin.Context) {
 		var json AddExpJson
-		//data,err :=context.GetRawData(); if err== nil{
-		//	panic(err)
-		//}
-		//log.Info(string(data))
 		if err := context.ShouldBindJSON(&json); err !=nil{
 			context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -107,6 +106,6 @@ func main() {
 		context.JSON(http.StatusOK, gin.H{"status": "success", "id":ids})
 
 	})
-	r.Run(":8989")
+	r.Run(fmt.Sprintf(":%d", port))
 
 }
