@@ -134,6 +134,9 @@ func (e *experiment) prepareTrial(trialId string, params *map[string]interface{}
 		if k == "model_name" {
 			numerousJson[k] = trialId
 		}
+		if k == "s3.model_path"{
+			numerousJson[k] = fmt.Sprintf("numerous_v2/default/%s", trialId)
+		}
 		if k == "fs.train_end_dir" {
 			endDir = numerousJson[k]
 		}
@@ -259,6 +262,7 @@ func (e *experiment) keepAlive() {
 	for {
 		log.Info("KeepAlive: ", e.status, "running trials: ", e.currentNum, "has run ", e.runNum, "max: ", e.maxTrialNum)
 		if e.status != RUNNING {
+			log.Info("keepAlive no running")
 			return
 		}
 		alive := IpcData{
