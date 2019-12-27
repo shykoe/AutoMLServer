@@ -61,7 +61,7 @@ func (t *trial) callBore(boreFile string) error {
 	boreMap["appinstance_name"] = t.jobId
 	boreMap["app_name"] = t.jobId
 	s3Url := fmt.Sprintf("%s:%s", "http://s3sz.sumeru.mig/algbaseserviceapi", t.s3)
-	boreMap["program_urls"].([]string)[0] = s3Url
+	boreMap["program_urls"].([]interface{})[0] = s3Url
 	log.Info(boreMap)
 	b, err := json.Marshal(boreMap)
 	if err != nil {
