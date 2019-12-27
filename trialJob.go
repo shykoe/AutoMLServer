@@ -85,8 +85,11 @@ func (t *trial) getMetric() error {
 		if t.status == SUCCESS || t.status == ERROR || t.status == USERCANCEL {
 			return nil
 		}
-		Pos, result, str, _ := getBoreLog(t.jobId, "driver", "E_STDOUT", offset, everyLen)
+		Pos, result, str, err := getBoreLog(t.jobId, "driver", "E_STDOUT", offset, everyLen)
 		//log.Info("offset: ", offset)
+		if err !=nil{
+			continue
+		}
 		if str == "" {
 			time.Sleep(time.Second * 5)
 			continue

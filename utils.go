@@ -169,7 +169,10 @@ func getBoreLog(appName string, containerName string, logType string, offset int
 	//log.Info("getBoreLog Url: ", req.URL.String())
 	//resp, err := http.DefaultClient.Do(req)
 	var data = make(map[string]interface{})
-	response, _ := ioutil.ReadAll(resp.Body)
+	response, err := ioutil.ReadAll(resp.Body)
+	if err!=nil{
+		return 0,nil,"",err
+	}
 	if err = json.Unmarshal(response, &data); err != nil {
 		log.Error(err)
 		return 0, nil, "", err
