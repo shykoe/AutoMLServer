@@ -106,6 +106,6 @@ func main() {
 		context.JSON(http.StatusOK, gin.H{"status": "success", "id":ids})
 
 	})
-	r.Run(fmt.Sprintf(":%d", port))
+	r.Run(fmt.Sprintf(":%d", *port))
 
 }
