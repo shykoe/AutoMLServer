@@ -392,6 +392,7 @@ func (e *experiment) send(data IpcData) error {
 }
 func (e *experiment) close() {
 	e.mu.Lock()
+	log.Info("close : ", e.expId)
 	defer e.mu.Unlock()
 	if e.tuner != nil {
 		e.tuner.Process.Kill()
