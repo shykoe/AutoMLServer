@@ -164,7 +164,7 @@ func (e *experiment) prepareTrial(trialId string, params *map[string]interface{}
 		expId:      e.expId,
 		boreFile:   e.boreFile,
 		endDir:     endDir,
-		s3:         s3Path,
+		s3:         fmt.Sprintf("%s/%s",BUCKET,s3Path) ,
 		metricll:   list.New(),
 		exp:        e,
 	}
