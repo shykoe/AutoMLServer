@@ -52,6 +52,7 @@ func (a *AddExpJson) toString() string{
 func main() {
 	port := flag.Int("port",8989,"Server port")
 	configFile := flag.String("config", "./config.yml", "config file")
+	flag.Parse()
 	log.SetReportCaller(true)
 	err := initConfig(*configFile)
 	if err!=nil{

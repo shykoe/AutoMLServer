@@ -24,7 +24,6 @@ func TestParseMetric(t *testing.T){
 }
 func TestGetBoreLog(t *testing.T)  {
 	initConfig("./config.yml")
-	//log.SetReportCaller(true)
 	var offset int = 0
 	var everyLen  = 1000
 	for ; ;  {
