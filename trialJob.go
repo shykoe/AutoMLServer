@@ -111,6 +111,7 @@ func (t *trial) getMetric() error{
 			}
 		}
 		offset = Pos
+		time.Sleep(1*time.Second)
 	}
 	return nil
 }
