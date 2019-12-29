@@ -362,15 +362,15 @@ func (e *experiment) run() {
 		time.Sleep(2 * time.Second)
 	}
 }
-func (e *experiment) updateMetric(metric *metric, trialInd int) error {
+func (e *experiment) updateMetric(metric *metric, trialInd int, trialId string) error {
 
 	value, err := getOptimizeMetric(e.optimizeParam, metric)
 	if err != nil {
 		return err
 	}
 	data := &ReportData{
-		ParameterId: strconv.Itoa(trialInd),
-		TrialJobId:  strconv.Itoa(trialInd),
+		ParameterId: trialInd,
+		TrialJobId:  trialId,
 		Type:        metric.metricType,
 		Sequence:    metric.count,
 		Value:       value,

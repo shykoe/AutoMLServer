@@ -27,7 +27,7 @@ const (
 )
 
 type ReportData struct {
-	ParameterId string  `json:"parameter_id"`
+	ParameterId int  `json:"parameter_id"`
 	TrialJobId  string  `json:"trial_job_id"`
 	Type        string  `json:"type"`
 	Sequence    int     `json:"sequence"`

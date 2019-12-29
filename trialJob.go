@@ -80,7 +80,7 @@ func (t *trial) callBore(boreFile string) error {
 }
 func (t *trial) getMetric() error {
 	var offset int = 0
-	var everyLen = 1000
+	var everyLen = 10000
 	for {
 		if t.status == SUCCESS || t.status == ERROR || t.status == USERCANCEL {
 			return nil
@@ -112,9 +112,14 @@ func (t *trial) getMetric() error {
 				}
 				t.metricll.PushBack(currentMetric)
 				time.Sleep(2 * time.Second)
-				err = t.exp.updateMetric(currentMetric, t.ind)
+				err = t.exp.updateMetric(currentMetric, t.ind, t.jobId)
 				if err != nil {
 					return err
+				}
+				if currentMetric.metricType == "FINAL"{
+					t.close()
+					t.exp.trialChan <- t.jobId
+					return nil
 				}
 			}
 		}

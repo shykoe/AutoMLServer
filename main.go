@@ -91,29 +91,41 @@ func main() {
 			context.JSON(http.StatusOK, gin.H{"status": "error", "msg": "Error in OptimizeParam!"})
 			return
 		}
-		//download Tar
-		fileName := path.Base(json.S3Tar)
-		tarFile := fmt.Sprintf("%s/%s", TMPPATH, fileName)
-		err = downloadS3(tarFile, BUCKET, json.S3Tar)
-		if err != nil {
-			context.JSON(http.StatusOK, gin.H{"status": "error", "msg": err.Error()})
-			return
-		}
-		//ex tar
-		err = extractTar(tarFile, fmt.Sprintf("%s/%s", TMPPATH, ids))
-		if err != nil {
-			context.JSON(http.StatusOK, gin.H{"status": "error", "msg": err.Error()})
-			return
-		}
+		var boreFile string
+		if DEV == "1"{
+			tarFile := "/Users/shykoe/go/src/auto/mock/20191223/s3/test.tar"
+			err = extractTar(tarFile, fmt.Sprintf("%s/%s", TMPPATH, ids))
+			if err != nil {
+				context.JSON(http.StatusOK, gin.H{"status": "error", "msg": err.Error()})
+				return
+			}
+			boreFile = "/Users/shykoe/go/src/auto/mock/20191223/bore.json"
+		}else{
+			fileName := path.Base(json.S3Tar)
+			tarFile := fmt.Sprintf("%s/%s", TMPPATH, fileName)
+			err = downloadS3(tarFile, BUCKET, json.S3Tar)
+			if err != nil {
+				context.JSON(http.StatusOK, gin.H{"status": "error", "msg": err.Error()})
+				return
+			}
+			//ex tar
+			err = extractTar(tarFile, fmt.Sprintf("%s/%s", TMPPATH, ids))
+			if err != nil {
+				context.JSON(http.StatusOK, gin.H{"status": "error", "msg": err.Error()})
+				return
+			}
 
-		// download bore.json
-		boreFileName := path.Base(json.S3BoreFile)
-		boreFile := fmt.Sprintf("%s/%s", TMPPATH, boreFileName)
-		err = downloadS3(boreFile, BUCKET, json.S3BoreFile)
-		if err != nil {
-			context.JSON(http.StatusOK, gin.H{"status": "error", "msg": err.Error()})
-			return
+			// download bore.json
+			boreFileName := path.Base(json.S3BoreFile)
+			boreFile = fmt.Sprintf("%s/%s", TMPPATH, boreFileName)
+			err = downloadS3(boreFile, BUCKET, json.S3BoreFile)
+			if err != nil {
+				context.JSON(http.StatusOK, gin.H{"status": "error", "msg": err.Error()})
+				return
+			}
 		}
+		//download Tar
+
 
 		newExp := &experiment{
 			tunerType:     json.TunerType,
