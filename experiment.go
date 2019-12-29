@@ -49,6 +49,10 @@ type experiment struct {
 func (e *experiment) checkAlive() {
 	for {
 		time.Sleep(3 * time.Second)
+		if e.status != RUNNING || e.status == READY {
+			log.Info("checkAlive no running or READY")
+			return
+		}
 		e.mu.Lock()
 		if e.currentNum == 0 && e.runNum == e.maxTrialNum {
 			e.status = SUCCESS
@@ -313,6 +317,7 @@ func (e *experiment) run() {
 	e.jobFile = e.getS3File()
 	go e.keepAlive()
 	go e.work()
+	go e.checkAlive()
 	initExp := IpcData{
 		CedType:    Initialize,
 		CmdContent: e.searchSpace,
