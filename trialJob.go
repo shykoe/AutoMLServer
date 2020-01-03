@@ -60,6 +60,7 @@ func (t *trial) callBore(boreFile string) error {
 	}
 	boreMap["appinstance_name"] = t.jobId
 	boreMap["app_name"] = t.jobId
+	boreMap["skey"] = SKEY
 	s3Url := fmt.Sprintf("%s:%s", "http://s3sz.sumeru.mig/algbaseserviceapi", t.s3)
 	boreMap["program_urls"] = []string{s3Url}
 
