@@ -400,10 +400,18 @@ func (e *experiment) send(data IpcData) error {
 	_, err := e.write4out.Write(byteContent)
 	return err
 }
+func (e *experiment) updateStatus(status string) error {
+	_, err := DB.Exec("UPDATE `t_experiment_info` SET `status` = ? WHERE  `experiment_id` = ?", status, e.expId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (e *experiment) close() {
 	e.mu.Lock()
 	log.Info("close : ", e.expId)
 	defer e.mu.Unlock()
+	e.updateStatus(SUCCESS)
 	if e.tuner != nil {
 		e.tuner.Process.Kill()
 	}
