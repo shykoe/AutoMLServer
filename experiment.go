@@ -313,6 +313,7 @@ func (e *experiment) run() {
 	e.read4out = r2
 	e.tuner = cmd
 	go cmd.Run()
+	e.status = RUNNING
 	go e.listen()
 	e.jobFile = e.getS3File()
 	go e.keepAlive()
@@ -323,7 +324,6 @@ func (e *experiment) run() {
 		CmdContent: e.searchSpace,
 	}
 	e.send(initExp)
-	e.status = RUNNING
 	result, err := DB.Exec("insert INTO t_experiment_info(`experiment_name`, `runner`, `search_space`, `start_time`,"+
 		" `trial_concurrency`, `max_trial_num`, `algorithm_type`, `algorithm_content`, `status`, `optimize_param`) values(?,?,?,?,?,?,?,?,?,?) ",
 		e.expName, e.runner, e.searchSpace, time.Now(), e.parallel, e.maxTrialNum, e.tunerType, e.tunerArgs, e.status, e.optimizeParam)
