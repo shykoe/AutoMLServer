@@ -69,7 +69,7 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-	var exp = make(map[string]*experiment)
+	//var exp = make(map[string]*experiment)
 	r := gin.Default()
 	r.POST("/addExp", func(context *gin.Context) {
 		var json AddExpJson
@@ -144,9 +144,26 @@ func main() {
 			optimizeParam: json.OptimizeParam,
 		}
 		go newExp.run()
-		exp[ids] = newExp
+		//exp[ids] = newExp
 		context.JSON(http.StatusOK, gin.H{"status": "success", "id": ids})
 
+	})
+
+	r.GET("/expStatus/:id", func(context *gin.Context) {
+		ids := context.Param("id")
+		rows, err := DB.Query("select  status from `t_experiment_info` where experiment_name = ?", ids)
+		if err!=nil{
+			context.JSON(http.StatusOK, gin.H{"status": "error", "msg": "DB error!"})
+		}
+		var name string
+		for rows.Next() {
+			if err := rows.Scan(&name); err != nil {
+				// Check for a scan error.
+				// Query rows will be closed with defer.
+				log.Fatal(err)
+			}
+		}
+		context.JSON(http.StatusOK, gin.H{"status": "success", "msg": name})
 	})
 	r.Run(fmt.Sprintf(":%d", *port))
 
