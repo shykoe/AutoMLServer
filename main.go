@@ -48,7 +48,21 @@ type AddExpJson struct {
 	S3Tar         string `form:"S3Tar" json:"S3Tar" xml:"S3Tar" binding:"required"`
 	S3BoreFile    string `form:"S3BoreFile" json:"S3BoreFile" xml:"S3BoreFile" binding:"required"`
 }
+type ExpInDb struct {
+	Id        int    `json:"id" form:"id"`
+	ExpName string `json:"expName" form:"ExpName"`
+	Runner  string `json:"runner" form:"Runner"`
+	SearchSpace  string `json:"searchSpace" form:"SearchSpace"`
+	StartTime  string `json:"startTime" form:"StartTime"`
+	EndTime  string `json:"endTime" form:"EndTime"`
+	TrialConcurrency int `json:"trialConcurrency" form:"TrialConcurrency"`
+	MaxTrialNum int `json:"maxTrialNum" form:"MaxTrialNum"`
+	AlgorithmType string `json:"algorithmType" form:"AlgorithmType"`
+	Status string `json:"status" form:"Status"`
+	OptimizeParam string `json:"optimizeParam" form:"OptimizeParam"`
 
+
+}
 func (a *AddExpJson) toString() string {
 	str := fmt.Sprintf("User: %s\nS3Tar: %s\nTunerType: %s\nTunerArgs: %s\nSearchSpace: %s\nParallel: %d", a.User, a.S3Tar, a.TunerType, a.TunerArgs, a.SearchSpace, a.Parallel)
 	return str
@@ -164,6 +178,49 @@ func main() {
 			}
 		}
 		context.JSON(http.StatusOK, gin.H{"status": "success", "msg": name})
+	})
+	r.GET("/listExp", func(context *gin.Context) {
+		name := context.Query("name")
+		startTime := context.Query("start")
+		endTime := context.Query("end")
+		log.Info("name: ", name, " startTime: ", startTime, " endTime ", endTime)
+		if name!=""{
+			var res [] ExpInDb
+			var item ExpInDb
+			if startTime!="" && endTime!=""{
+				rows, err := DB.Query("select experiment_id, experiment_name, runner, start_time, end_time, status from `t_experiment_info` where runner = ? and start_time < ? and start_time >?", name, endTime, startTime )
+				if err!=nil{
+					context.JSON(http.StatusOK, gin.H{"status": "error", "msg": "DB error!"})
+				}
+				for rows.Next(){
+					EndTime := sql.NullString{String:"", Valid:false}
+					if err := rows.Scan(&item.Id, &item.ExpName, &item.Runner, &item.StartTime, &EndTime, &item.Status);err!=nil{
+						context.JSON(http.StatusOK, gin.H{"status": "error", "msg": "DB error!"})
+						return
+					}
+					item.EndTime = EndTime.String
+					res = append(res, item)
+				}
+			}else{
+				rows, err := DB.Query("select experiment_id, experiment_name, runner, start_time, end_time, status from `t_experiment_info` where runner = ? ", name)
+				if err!=nil{
+					context.JSON(http.StatusOK, gin.H{"status": "error", "msg": "DB error!"})
+				}
+				for rows.Next(){
+					EndTime := sql.NullString{String:"", Valid:false}
+					if err := rows.Scan(&item.Id, &item.ExpName, &item.Runner, &item.StartTime, &EndTime, &item.Status);err!=nil{
+						context.JSON(http.StatusOK, gin.H{"status": "error", "msg": "DB error!"})
+						return
+					}
+					item.EndTime = EndTime.String
+					//log.Info(item)
+					res = append(res, item)
+				}
+			}
+
+			context.JSON(http.StatusOK, gin.H{"status": "success", "msg": res})
+		}
+
 	})
 	r.Run(fmt.Sprintf(":%d", *port))
 

@@ -344,6 +344,7 @@ func (e *experiment) run() {
 		if e.runNum == e.maxTrialNum && e.status == SUCCESS {
 			log.Info("Job Done!")
 			e.close()
+			time.Sleep(3*time.Second)
 			return
 		}
 		if e.currentNum < e.parallel && e.runNum < e.maxTrialNum {
@@ -403,15 +404,16 @@ func (e *experiment) send(data IpcData) error {
 func (e *experiment) updateStatus(status string) error {
 	_, err := DB.Exec("UPDATE `t_experiment_info` SET `status` = ? WHERE  `experiment_id` = ?", status, e.expId)
 	if err != nil {
+		log.Error(err)
 		return err
 	}
 	return nil
 }
 func (e *experiment) close() {
 	e.mu.Lock()
+	e.updateStatus(SUCCESS)
 	log.Info("close : ", e.expId)
 	defer e.mu.Unlock()
-	e.updateStatus(SUCCESS)
 	if e.tuner != nil {
 		e.tuner.Process.Kill()
 	}
