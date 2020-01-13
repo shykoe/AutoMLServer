@@ -264,7 +264,7 @@ func (e *experiment) get() *IpcData {
 }
 func (e *experiment) keepAlive() {
 	for {
-		log.Info("KeepAlive: ", e.status, "running trials: ", e.currentNum, "has run ", e.runNum, "max: ", e.maxTrialNum)
+		log.Info("KeepAlive: ", e.status, " running trials: ", e.currentNum, "has run ", e.runNum, "max: ", e.maxTrialNum)
 		if e.status != RUNNING {
 			log.Info("keepAlive no running")
 			return
@@ -343,7 +343,8 @@ func (e *experiment) run() {
 	for {
 		if e.runNum == e.maxTrialNum && e.status == SUCCESS {
 			log.Info("Job Done!")
-			e.close()
+			go e.updateStatus(SUCCESS)
+			go e.close()
 			time.Sleep(3*time.Second)
 			return
 		}
@@ -402,6 +403,7 @@ func (e *experiment) send(data IpcData) error {
 	return err
 }
 func (e *experiment) updateStatus(status string) error {
+	log.Info("updateStatus: ", status)
 	_, err := DB.Exec("UPDATE `t_experiment_info` SET `status` = ? WHERE  `experiment_id` = ?", status, e.expId)
 	if err != nil {
 		log.Error(err)
@@ -411,7 +413,6 @@ func (e *experiment) updateStatus(status string) error {
 }
 func (e *experiment) close() {
 	e.mu.Lock()
-	e.updateStatus(SUCCESS)
 	log.Info("close : ", e.expId)
 	defer e.mu.Unlock()
 	if e.tuner != nil {
