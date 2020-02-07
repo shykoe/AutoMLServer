@@ -4,3 +4,5 @@ config.yml
 target
 dispatcher.log
 auto
+webui/node_modules
+webui/build
