@@ -46,7 +46,7 @@ class Search extends React.Component<SearchProps, SearchState> {
         };
       }
     componentDidMount() {
-        axios(`/listExp`, {
+        axios(`/api/listExp`, {
             method: 'GET',
         }).then(res =>{
             if(res.status == 200){
