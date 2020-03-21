@@ -269,6 +269,7 @@ func downloadS3(savePath string, bucket string, key string) error {
 		})
 	if err != nil {
 		log.Error("Unable to download item ", bucket, key)
+		log.Error(err)
 		return err
 	}
 	log.Info("Download item ", bucket, key, " to ", savePath)
