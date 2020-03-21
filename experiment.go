@@ -106,7 +106,7 @@ func (e *experiment) prepareTrial(trialId string, params *map[string]interface{}
 	for k, v := range *params {
 		var innerData string
 		if k == "minibatch" {
-			miniBatch = v.(int)
+			miniBatch = int(v.(float64))
 		}
 		if reflect.TypeOf(v).String() == "string" {
 			innerData = fmt.Sprintf("%s='%s'", k, v)
