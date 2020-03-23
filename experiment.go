@@ -361,6 +361,7 @@ func (e *experiment) run() {
 					e.close()
 					return
 				}
+				time.Sleep(3 * time.Second)
 				e.currentNum += 1
 				e.runNum += 1
 			}
