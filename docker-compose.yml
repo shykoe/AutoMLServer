@@ -1,0 +1,14 @@
+version: "3.1"
+
+services:
+  automlSer:
+    container_name: automlSer
+    image:  automlserver:flat
+    user: root
+    restart: always
+    network_mode: host
+    volumes:
+      - "./:/src"
+    working_dir: "/src"
+    tty: true
+    command: tail -F all
