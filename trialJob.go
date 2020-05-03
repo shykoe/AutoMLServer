@@ -79,6 +79,25 @@ func (t *trial) callBore(boreFile string) error {
 	log.Info("http Body:", string(response))
 	return nil
 }
+func (t *trial) killBore() error{
+	queryMap := make(map[string] string)
+	queryMap["appinstance_name"] = t.jobId
+	queryMap["kill_operator"] = t.exp.runner
+	queryMap["skey"] = SKEY
+	b, err := json.Marshal(queryMap)
+	if err != nil {
+		log.Error("queryMap error: ", err)
+		return err
+	}
+	resp, err := http.Post(BOREKILLURL, "application/json;charset=UTF-8", bytes.NewBuffer(b))
+	if err != nil {
+		log.Error("Http error ", err)
+		return err
+	}
+	response, _ := ioutil.ReadAll(resp.Body)
+	log.Info("http Body:", string(response))
+	return nil
+}
 func (t *trial) getMetric() error {
 	var offset int = 0
 	var everyLen = 10000

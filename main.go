@@ -32,6 +32,7 @@ var (
 	SKEY          string
 	BORELOGURL    string
 	BORESTATUSURL string
+	BOREKILLURL   string
 	DEV           string
 )
 

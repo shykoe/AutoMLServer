@@ -148,8 +148,22 @@ func initConfig(configPath string) error {
 	SKEY = config["skey"]
 	BORELOGURL = config["boreLogUrl"]
 	BORESTATUSURL = config["boreStatusUrl"]
+	BOREKILLURL = config["boreKillUrl"]
 	DEV = config["dev"]
+	initLog(config["logFile"])
 	return nil
+}
+func initLog(logFile string){
+	logf, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil{
+		return
+	}
+	mw := io.MultiWriter(os.Stdout, logf)
+	log.SetOutput(mw)
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+		DisableColors: true,
+	})
 }
 func getBoreLog(appName string, containerName string, logType string, offset int, length int) (int, []string, string, error) {
 	req, err := http.NewRequest("GET", BORELOGURL, nil)

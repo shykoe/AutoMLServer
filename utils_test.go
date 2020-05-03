@@ -47,3 +47,7 @@ func TestExtractTar(t *testing.T) {
 	initConfig("./config.yml")
 	extractTar("/Users/shykoe/go/src/auto/mock/20191223/numerous_v2_beta.20191223.814959378.tar", "./mock/tmp/tmp1")
 }
+func TestLoginit(t *testing.T){
+	initLog("testlog.log")
+	log.Info("testttt")
+}
