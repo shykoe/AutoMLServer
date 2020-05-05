@@ -81,8 +81,9 @@ func initDB() error {
 	DB.SetMaxIdleConns(0)                    //设置闲置连接数
 	return nil
 }
+//
 func parseMetric(data string) *metric {
-	r := *regexp.MustCompile(`metric_count_ = (\d+).+ver:'([\d|_]+)'.+data_info:'([\d|_]+)'.+loglosss=([1-9]\d*.\d*|0.\d*[1-9]\d*).+auc=([1-9]\d*.\d*|0.\d*[1-9]\d*).+predict_avg=([1-9]\d*.\d*|0.\d*[1-9]\d*).+real_avg=([1-9]\d*.\d*|0.\d*[1-9]\d*).+copc=([1-9]\d*.\d*|0.\d*[1-9]\d*)`)
+	r := *regexp.MustCompile(`metric_count_ = (\d+).+ver:'([\d|_]+)'.+data_info:'([\d|_]+)'.+auc = ([1-9]\d*.\d*|0.\d*[1-9]\d*).+predict_avg=([1-9]\d*.\d*|0.\d*[1-9]\d*).+real_avg=([1-9]\d*.\d*|0.\d*[1-9]\d*).+copc=([1-9]\d*.\d*|0.\d*[1-9]\d*)`)
 	match := r.FindAllStringSubmatch(data, -1)
 	if match == nil {
 		return nil
@@ -93,23 +94,23 @@ func parseMetric(data string) *metric {
 		}
 		ver := match[0][2]
 		dataInfo := match[0][3]
-		loss, err := strconv.ParseFloat(match[0][4], 32)
+		//loss, err := strconv.ParseFloat(match[0][4], 32)
+		//if err != nil {
+		//	return nil
+		//}
+		auc, err := strconv.ParseFloat(match[0][4], 32)
 		if err != nil {
 			return nil
 		}
-		auc, err := strconv.ParseFloat(match[0][5], 32)
+		predictAvg, err := strconv.ParseFloat(match[0][5], 32)
 		if err != nil {
 			return nil
 		}
-		predictAvg, err := strconv.ParseFloat(match[0][6], 32)
+		realAvg, err := strconv.ParseFloat(match[0][6], 32)
 		if err != nil {
 			return nil
 		}
-		realAvg, err := strconv.ParseFloat(match[0][7], 32)
-		if err != nil {
-			return nil
-		}
-		copc, err := strconv.ParseFloat(match[0][8], 32)
+		copc, err := strconv.ParseFloat(match[0][7], 32)
 		if err != nil {
 			return nil
 		}
@@ -117,7 +118,7 @@ func parseMetric(data string) *metric {
 			count:      count,
 			ver:        ver,
 			dataInfo:   dataInfo,
-			loss:       float32(loss),
+			loss:       float32(0),
 			auc:        float32(auc),
 			predictAvg: float32(predictAvg),
 			realAvg:    float32(realAvg),

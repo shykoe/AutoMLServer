@@ -2,12 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="2c8be38a-5fab-46da-a3ad-8aabf8d6dac9" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/numous/NumerousJob.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trialJob.go" beforeDir="false" afterPath="$PROJECT_DIR$/trialJob.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/trialJob_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/trialJob_test.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils.go" beforeDir="false" afterPath="$PROJECT_DIR$/utils.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/utils_test.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,6 +49,7 @@
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/" />
       <recent name="$PROJECT_DIR$/mock/20191223/s3" />
       <recent name="$PROJECT_DIR$" />
     </key>
@@ -223,6 +221,10 @@
       <screen x="0" y="0" width="1680" height="1050" />
     </state>
     <state x="506" y="287" width="667" height="476" key="find.popup/-595.-1440.2560.1440/0.0.1680.1050@0.0.1680.1050" timestamp="1588067105900" />
+    <state x="505" y="233" width="670" height="676" key="search.everywhere.popup" timestamp="1588702588580">
+      <screen x="0" y="0" width="1680" height="1050" />
+    </state>
+    <state x="505" y="233" width="670" height="676" key="search.everywhere.popup/0.0.1680.1050@0.0.1680.1050" timestamp="1588702588580" />
   </component>
   <component name="XDebuggerManager">
     <watches-manager>
