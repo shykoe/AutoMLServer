@@ -84,7 +84,7 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-	//var exp = make(map[string]*experiment)
+	var expMap = make(map[string]*experiment)
 	r := gin.Default()
 	r.POST("/addExp", func(context *gin.Context) {
 		var json AddExpJson
@@ -159,7 +159,7 @@ func main() {
 			optimizeParam: json.OptimizeParam,
 		}
 		go newExp.run()
-		//exp[ids] = newExp
+		expMap[ids] = newExp
 		context.JSON(http.StatusOK, gin.H{"status": "success", "id": ids})
 
 	})
@@ -222,6 +222,21 @@ func main() {
 			context.JSON(http.StatusOK, gin.H{"status": "success", "msg": res})
 		}
 
+	})
+	r.POST("/stopExp", func(context *gin.Context) {
+		Id :=  context.Query("id")
+		isFind :=  false
+		for s, e := range expMap {
+			if s == Id{
+				e.close()
+				context.JSON(http.StatusOK, gin.H{"status": "success", "msg": "停止成功"})
+				isFind = true
+				break
+			}
+		}
+		if isFind== false{
+			context.JSON(http.StatusOK, gin.H{"status": "error", "msg": "未找到作业"})
+		}
 	})
 	r.Run(fmt.Sprintf(":%d", *port))
 
