@@ -83,7 +83,7 @@ func initDB() error {
 }
 //
 func parseMetric(data string) *metric {
-	r := *regexp.MustCompile(`metric_count_ = (\d+).+ver:'([\d|_]+)'.+data_info:'([\d|_]+)'.+auc = ([1-9]\d*.\d*|0.\d*[1-9]\d*).+predict_avg=([1-9]\d*.\d*|0.\d*[1-9]\d*).+real_avg=([1-9]\d*.\d*|0.\d*[1-9]\d*).+copc=([1-9]\d*.\d*|0.\d*[1-9]\d*)`)
+	r := *regexp.MustCompile(`metric_count_ = (\d+).+ver:'([\d|_]+)'.+data_info:'([\d|_]+)'.+1_ctr_auc = ([1-9]\d*.\d*|0.\d*[1-9]\d*).+predict_avg=([1-9]\d*.\d*|0.\d*[1-9]\d*).+real_avg=([1-9]\d*.\d*|0.\d*[1-9]\d*).+copc=([1-9]\d*.\d*|0.\d*[1-9]\d*)`)
 	match := r.FindAllStringSubmatch(data, -1)
 	if match == nil {
 		return nil
