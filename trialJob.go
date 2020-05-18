@@ -207,9 +207,9 @@ func (t *trial) run() {
 	}
 }
 func (t *trial) close() {
-	err:= t.killBore()
-	if err!=nil{
-		log.Error(err)
-	}
+	//err:= t.killBore()
+	//if err!=nil{
+	//	log.Error(err)
+	//}
 	log.Info(" Trial close ", t.jobId)
 }
