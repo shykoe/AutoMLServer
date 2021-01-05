@@ -6,7 +6,7 @@
     "@types/react-redux": "^4.4.35",
     "@types/redux-logger": "^3.0.7",
     "antd": "^3.8.1",
-    "axios": "^0.18.1",
+    "axios": "^0.21.1",
     "babel-polyfill": "^6.26.0",
     "copy-to-clipboard": "^3.0.8",
     "echarts": "^4.1.0",
